@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>E-Library Teknik</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    
+</head>
+<style>
+    .book-card {
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .book-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+    .group {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+  }
+    .group::after {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #2563eb; /* Warna biru (sesuai hover text) */
+    transition: width 0.3s ease;
+  }
+  .group:hover::after {
+    width: 100%;
+  }
+  
+</style>
+<body class="font-sans">
+    <!-- Header/Navigation -->
+    <header class="sticky top-0 z-50 bg-white py-4 px-6 md:px-10 flex justify-between items-center shadow-md">
+        <div class="flex items-center">
+            <div class="text-blue-600 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <span class="font-bold text-xl text-indigo-900"><a href="index.html">E-Library Teknik</a></span>
+        </div>
+        
+        <nav class="hidden md:flex items-center space-x-6">
+            <a href="#features" class="button-features relative group text-indigo-900 hover:text-blue-600">Fitur</a>
+            <a href="#services" class="button-services relative group text-indigo-900 hover:text-blue-600">Layanan</a>
+            <a href="#review" class="button-review relative group text-indigo-900 hover:text-blue-600">Ulasan</a>
+            <a href="#lokasi" class="button-lokasi relative group text-indigo-900 hover:text-blue-600">Lokasi</a>
+        </nav>
+        
+        <button class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"><a href="login.php">Login</a></button>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-indigo-900 to-blue-500 text-white">
+        <div class="container mx-auto flex flex-col md:flex-row items-center py-12 px-6 md:px-10">
+            <div class="md:w-1/2 mb-8 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Cari & Baca <span class="text-blue-300">buku favoritmu</span> dengan mudah</h1>
+                <p class="text-lg mb-6">Mulailah perjalanan literasi yang belum pernah ada sebelumnya dengan aplikasi perpustakaan revolusioner kami! Memperkenalkan pengalaman tanpa batas yang sangat meningkatkan penemuan buku, di mana Anda dapat dengan mudah mencari dan meminjam buku-buku favorit Anda.</p>
+                <button class="bg-white text-indigo-900 py-3 px-6 rounded-lg font-bold hover:bg-blue-100 transition"><a href="login.php">Mulai Cari »</a></button>
+            </div>
+            
+            <div class="flex items-center space-x-8 ml-24">
+                <!-- Book 1 - Dark Cover -->
+                <div class="book-card h-40 w-28 transform -rotate-12 transition-all duration-300">
+                    <img src="img/100330_f.jpg" alt="Comic Sophie" class="h-full w-full object-cover rounded-lg shadow-lg" />
+                </div>
+    
+                <!-- Book 2 - Light Cover -->
+                <div class="book-card h-40 w-28 transform rotate-3 transition-all duration-300">
+                    <img src="img/113992_f.jpg" alt="Novel Cover" class="h-full w-full object-cover rounded-lg shadow-lg" />
+                </div>
+    
+                <!-- Book 3 - Character Cover -->
+                <div class="book-card h-40 w-28 transform rotate-6 transition-all duration-300">
+                    <img src="img/Capture.png" alt="Gustira" class="h-full w-full object-cover rounded-lg shadow-lg" />
+                </div>
+            </div>
+
+                </div>
+              
+                   
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 px-6 md:px-10 bg-white" id="features">
+        <div class="container mx-auto" >
+            <div class="flex items-center mb-8">
+                <span class="text-2xl mr-2">🤔</span>
+                <h2 class="text-3xl font-bold text-indigo-900">Fitur apa saja yang dapat diakses</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+                <!-- Feature 1 -->
+                <div class="bg-gray-100 p-6 rounded-lg text-center">
+                    <div class="bg-blue-500 w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-indigo-900">Mencari Buku</h3>
+                    <p class="text-gray-600">Temukan bacaan Anda berikutnya dengan mudah menggunakan pencarian buku kami yang canggih dan intuitif.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="bg-gray-100 p-6 rounded-lg text-center">
+                    <div class="bg-blue-500 w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-indigo-900">Mengulas buku</h3>
+                    <p class="text-gray-600">Dokumentasikan kritik yang mendalam dan bagikan pemikiran Anda tentang berbagai mahakarya sastra dengan mudah. </p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="bg-gray-100 p-6 rounded-lg text-center">
+                    <div class="bg-blue-500 w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-indigo-900">Daftar Keinginan buku</h3>
+                    <p class="text-gray-600">Susun impian literasi Anda: masukkan buku ke daftar keinginan untuk petualangan dan penemuan di masa mendatang.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="py-16 px-6 md:px-10 bg-gray-50" id="services">
+        <div class="container mx-auto">
+            <div class="flex items-center mb-12">
+                <span class="text-2xl mr-2">🚀</span>
+                <h2 class="text-3xl font-bold text-indigo-900">Layanan untuk anda</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div class="bg-white rounded-lg overflow-hidden shadow-md">
+                    <img src="img/perpus-pusat-1170x878.jpeg" alt="Library interior" class="w-full h-64 object-cover">
+                </div>
+                
+                <div>
+                    <h3 class="text-2xl font-bold mb-4 text-indigo-900"><span class="text-blue-500">Baca</span> Buku favoritmu dengan mudah di E-Library Teknik</h3>
+                    <p class="text-gray-600 mb-6">
+                       Melihat, membaca, dan mengatur buku favoritmu kini jadi lebih mudah. Sistem keranjang perpustakaan digital yang terintegrasi akan membuat perjalanan membacamu lebih lancar dan menyenangkan, mengatur pekerjaanmu dan memberimu lebih banyak waktu untuk benar-benar menikmatinya!
+                    </p>
+                    <p class="text-gray-600">
+                        Sewa tanpa ribet, rak buku yang dipersonalisasi E-Library Teknik mengubah cara mengelola buku, meningkatkan pengalaman membacamu!
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mt-20">
+                <h3 class="text-2xl font-bold mb-4 text-indigo-900">Baca Buku Sekarang :<br>Langsung Nikmati Serunya Membaca</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mt-8">
+                    <div>
+                        <p class="text-gray-600 mb-4">
+                            Temukan keseruan membaca dalam sekejap. Akses perpustakaan digital yang dipenuhi berbagai bacaan favoritmu, dan tenggelam dalam cerita-cerita menarik hanya dalam hitungan menit. Membaca jadi cepat dan mudah — cukup dengan satu klik!
+                        </p>
+                        <ul class="text-gray-600 space-y-2">
+                            <li class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                 Jelajahi berbagai genre, pilih, dan sewa dalam hitungan menit
+                            </li>
+                            <li class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Kelola pengalaman membacamu dengan mudah lewat platform yang intuitif
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <img src="img/gramedia jkt.png" alt="Modern library" class="w-full h-64 object-cover rounded-lg shadow-md">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> 
+
+    <!-- Reviews Section -->
+     <section class="py-16 px-6 md:px-10 bg-white" id="review">
+        <div class="container mx-auto">
+            <div class="flex items-center mb-12">
+                <span class="text-2xl mr-2">💬</span>
+                <h2 class="text-3xl font-bold text-indigo-900">Ulasan dari Pengguna lain</h2>
+            </div> 
+            
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-8"> 
+                <!-- Review 1 -->
+                 <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+                    <div class="flex justify-center mb-4">
+                        <img src="img/faiz1.png" alt="Faiz" class="w-16 h-16 rounded-full">
+                    </div>
+                    <p class="text-gray-600 mb-4 text-center">"Koleksinya sangat lengkap dan sistem pencariannya modern. Saya bisa menemukan buku referensi yang saya butuhkan dengan cepat dan mudah!."</p>
+                    <div class="text-center">
+                        <h4 class="font-bold text-indigo-900">Muhammad Sumbul</h4>
+                        <p class="text-gray-500 text-sm">Mahasiswa Teknik Informatika</p>
+                    </div>
+                </div>
+                
+                <!-- Review 2 -->
+                 <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+                    <div class="flex justify-center mb-4">
+                        <img src="img/nawawi.png" alt="Mohammed Khan" class="w-16 h-16 rounded-full">
+                    </div>
+                    <p class="text-gray-600 mb-4 text-center">"Suasananya tenang dan nyaman, tempat terbaik untuk fokus membaca atau menyelesaikan tugas. Fasilitas Wi-Fi dan ruang bacanya sangat membantu."</p>
+                    <div class="text-center">
+                        <h4 class="font-bold text-indigo-900">Ismail Khanabawi</h4>
+                        <p class="text-gray-500 text-sm">Mahasiswa Teknik Informatika</p>
+                    </div>
+                </div> 
+                
+                <!-- Review 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+                    <div class="flex justify-center mb-4">
+                        <img src="img/buana.png" alt="William Gonzalez" class="w-16 h-16 rounded-full">
+                    </div>
+                    <p class="text-gray-600 mb-4 text-center">"Fitur pengecekan status buku ini sangat efisien. Saya bisa memastikan semua referensi yang saya perlukan tersedia sebelum datang. Menghemat banyak waktu."</p>
+                    <div class="text-center">
+                        <h4 class="font-bold text-indigo-900">Achmad buana</h4>
+                        <p class="text-gray-500 text-sm">Mahasiswa Teknik Informatika</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> 
+
+    <!-- Location Section -->
+    <section class="py-16 px-6 md:px-10 bg-gray-50" id="lokasi">
+        <div class="container mx-auto">
+            <div class="flex items-center mb-12">
+                <span class="text-2xl mr-2">📍</span>
+                <h2 class="text-3xl font-bold text-indigo-900">Our Library Location</h2>
+            </div>
+            
+            <div class="bg-white p-2 rounded-lg shadow-md">
+               <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.546757332708!2d110.35968307431102!3d-7.062418769212545!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e70897d2156b5a7%3A0x8a910b98b1ce055c!2sFakultas%20Teknik%20Universitas%20Wahid%20Hasyim!5e0!3m2!1sid!2sid!4v1749436040749!5m2!1sid!2sid" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="w-full rounded"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white py-12 px-6 md:px-10 border-t border-gray-200">
+        <div class="container mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="text-gray-500 font-medium mb-4">Managed By</h4>
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 rounded-full p-2 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold text-indigo-900">E-Library Teknik</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-gray-500 font-medium mb-4">Social Media</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-600 hover:text-blue-600">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-blue-600">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-blue-600">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-gray-500 font-medium mb-4">Slogan</h4>
+                    <p class="text-indigo-900 font-medium">Membaca Jembatan Ilmu.</p>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-6 text-center text-gray-500 text-sm">
+                © 2023 E-Library Teknik. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script src="main.js"></script>
+</body>
+</html>
