@@ -119,9 +119,17 @@ if (isset($_POST['signup'])) {
                 </div>
             </div>
 
-            <div class="md:col-span-2">
-                <button type="submit" name="signup" class="w-full bg-indigo-600 text-white p-3 rounded-md font-semibold hover:bg-indigo-700 transition duration-150">Daftar Sekarang</button>
-            </div>
+            <div class="md:col-span-2 space-y-4">
+    <button type="submit" name="signup" class="w-full bg-indigo-600 text-white p-3 rounded-md font-semibold hover:bg-indigo-700 transition duration-150">
+        Daftar Sekarang
+    </button>
+
+    <p class="text-center text-sm text-gray-600">
+        Sudah punya akun? 
+        <a href="login.php" class="text-indigo-600 hover:text-indigo-800 font-medium">Login di sini</a>
+    </p>
+</div>
+
         </form>
     </div>
 

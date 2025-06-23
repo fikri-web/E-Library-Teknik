@@ -4,58 +4,65 @@
 session_start();
 header('Content-Type: application/json');
 
-// Ganti 'service/database.php' sesuai dengan path file koneksi Anda
+// 1. Panggil koneksi database
 require_once "service/database.php"; 
 
-// Pastikan Anda menggunakan variabel koneksi yang benar, contoh: $db atau $koneksi
-// Saya asumsikan nama variabel koneksi Anda adalah $db dari file login Anda.
-// Jika berbeda, sesuaikan variabel $db di bawah ini dengan nama variabel koneksi Anda.
+// Pastikan variabel koneksi ($db) tersedia
 if (!isset($db)) {
     global $koneksi; 
     $db = $koneksi;
 }
 
-// 1. Cek apakah user sudah login
+// 2. Cek apakah user sudah login
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Anda harus login untuk bookmark.']);
     exit();
 }
 
-// 2. Cek apakah id_buku dikirim dari JavaScript
+// 3. Cek apakah data id_buku dikirim
 if (!isset($_POST['id_buku'])) {
     echo json_encode(['status' => 'error', 'message' => 'ID Buku tidak ditemukan.']);
     exit();
 }
 
+// 4. Ambil data user dan buku
 $id_user = $_SESSION['user_id'];
 $id_buku = (int)$_POST['id_buku'];
 
-// 3. Cek apakah bookmark sudah ada di database
+// 5. Cek apakah bookmark untuk buku ini sudah ada
 $stmt_check = $db->prepare("SELECT id FROM bookmarks WHERE id_user = ? AND id_buku = ?");
 $stmt_check->bind_param("ii", $id_user, $id_buku);
 $stmt_check->execute();
 $result = $stmt_check->get_result();
 
 if ($result->num_rows > 0) {
-    // 4. Jika sudah ada, hapus bookmark (un-bookmark)
+    // 6a. Jika SUDAH ADA, maka HAPUS bookmark
     $stmt_del = $db->prepare("DELETE FROM bookmarks WHERE id_user = ? AND id_buku = ?");
     $stmt_del->bind_param("ii", $id_user, $id_buku);
     if ($stmt_del->execute()) {
-        // Kirim pesan sukses 'removed' ke JavaScript
+        // Kirim pesan 'removed' ke JavaScript
         echo json_encode(['status' => 'success', 'action' => 'removed']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus bookmark.']);
     }
 } else {
-    // 5. Jika belum ada, tambahkan bookmark baru
+    // 6b. Jika BELUM ADA, maka TAMBAHKAN bookmark baru
     $stmt_ins = $db->prepare("INSERT INTO bookmarks (id_user, id_buku) VALUES (?, ?)");
     $stmt_ins->bind_param("ii", $id_user, $id_buku);
     if ($stmt_ins->execute()) {
-        // Kirim pesan sukses 'bookmarked' ke JavaScript
-        echo json_encode(['status' => 'success', 'action' => 'bookmarked']);
+        // =================================================================
+        // INI BAGIAN YANG DIPERBAIKI
+        // Mengirim 'added' agar sesuai dengan yang diperiksa JavaScript
+        // =================================================================
+        echo json_encode(['status' => 'success', 'action' => 'added']);
+
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Gagal menambah bookmark.']);
     }
 }
 
-// Tutup statement dan koneksi jika perlu
+// 7. Tutup statement
 $stmt_check->close();
-// $db->close(); // Jangan ditutup jika skrip lain masih butuh koneksi
+// Disarankan untuk tidak menutup koneksi $db jika ada skrip lain yang masih berjalan
 
 ?>

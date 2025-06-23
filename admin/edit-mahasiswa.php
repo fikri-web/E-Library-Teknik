@@ -12,33 +12,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama = trim($_POST['nama']);
     $prodi = trim($_POST['prodi']);
     $email = trim($_POST['email']);
+    $tanggallahir = trim($_POST['tanggallahir']);
+    $gender = trim($_POST['gender']);
     $foto_lama = $_POST['foto_lama'];
-    
+
     $nama_foto = $foto_lama;
 
     // Cek jika ada file foto baru yang diupload
     if (isset($_FILES["foto"]) && $_FILES["foto"]["error"] == 0) {
         // Hapus file foto lama jika ada
-        if(!empty($foto_lama) && file_exists('../uploads/profile_photos/' . $foto_lama)){
+        if (!empty($foto_lama) && file_exists('../uploads/profile_photos/' . $foto_lama)) {
             unlink('../uploads/profile_photos/' . $foto_lama);
         }
-        
+
         $target_dir = "../uploads/profile_photos/";
         $nama_foto = uniqid() . '-' . basename($_FILES["foto"]["name"]);
         $target_file = $target_dir . $nama_foto;
-        
+
         if (!move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
             $error_msg = "Gagal upload foto baru.";
-            $nama_foto = $foto_lama; // Kembalikan ke nama foto lama jika gagal
+            $nama_foto = $foto_lama;
         }
     }
 
-    if(empty($error_msg)){
-        $sql = "UPDATE user SET nim=?, nama=?, prodi=?, email=?, profile_photo=? WHERE id=?";
-        
+    if (empty($error_msg)) {
+        $sql = "UPDATE user SET nim=?, nama=?, prodi=?, email=?, tanggallahir=?, gender=?, password=?, profile_photo=? WHERE id=?";
         if ($stmt = mysqli_prepare($db, $sql)) {
-            mysqli_stmt_bind_param($stmt, "sssssi", $nim, $nama, $prodi, $email,  $nama_foto, $id);
-            
+            mysqli_stmt_bind_param($stmt, "ssssssssi", $nim, $nama, $prodi, $email, $tanggallahir, $gender,  $nama_foto, $id);
             if (mysqli_stmt_execute($stmt)) {
                 $_SESSION['pesan'] = "Data mahasiswa berhasil diperbarui.";
                 header("location: mahasiswa.php");
@@ -48,16 +48,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
     }
-} 
+}
 // Logika untuk SELECT (mengisi form saat halaman di-load)
 else if (isset($_GET['id']) && !empty(trim($_GET['id']))) {
     $id = trim($_GET['id']);
     $sql = "SELECT * FROM user WHERE id = ?";
-    if($stmt = mysqli_prepare($db, $sql)){
+    if ($stmt = mysqli_prepare($db, $sql)) {
         mysqli_stmt_bind_param($stmt, "i", $id);
-        if(mysqli_stmt_execute($stmt)){
+        if (mysqli_stmt_execute($stmt)) {
             $result = mysqli_stmt_get_result($stmt);
-            if(mysqli_num_rows($result) == 1){
+            if (mysqli_num_rows($result) == 1) {
                 $mhs = mysqli_fetch_assoc($result);
             } else {
                 header("location: mahasiswa.php");
@@ -74,8 +74,8 @@ else if (isset($_GET['id']) && !empty(trim($_GET['id']))) {
 <?php 
 $pageTitle = "Edit Data Mahasiswa";
 include 'header.php';
+include 'sidebar.php';
 ?>
-<?php include 'sidebar.php'; ?>
 
 <div class="flex-1 flex flex-col overflow-hidden">
     <header class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
@@ -83,6 +83,11 @@ include 'header.php';
     </header>
     <main class="flex-1 p-6 overflow-y-auto">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+
+            <?php if (!empty($error_msg)): ?>
+                <div class="mb-4 p-4 bg-red-100 text-red-700 rounded"><?php echo $error_msg; ?></div>
+            <?php endif; ?>
+
             <form action="edit-mahasiswa.php" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="<?php echo $mhs['id']; ?>">
                 <input type="hidden" name="foto_lama" value="<?php echo htmlspecialchars($mhs['profile_photo']); ?>">
@@ -108,12 +113,25 @@ include 'header.php';
                             <input type="text" name="prodi" value="<?php echo htmlspecialchars($mhs['prodi']); ?>" class="shadow w-full py-2 px-3" required>
                         </div>
                         <div class="mb-4">
-                             <label class="block font-bold mb-2">Foto Saat Ini</label>
-                             <?php if(!empty($mhs['foto']) && file_exists('../uploads/profile_photos/' . $mhs['profile_photo'])): ?>
-                                <img src="../uploads/profile_photos<?php echo htmlspecialchars($mhs['profile_photo']); ?>" class="w-24 h-24 object-cover rounded-full shadow-md mb-2">
-                             <?php endif; ?>
-                             <label for="foto" class="block text-sm font-medium text-gray-500">Ganti Foto (opsional)</label>
-                             <input type="file" name="foto" id="foto" class="block w-full text-sm mt-1">
+                            <label for="tanggallahir" class="block font-bold mb-2">Tanggal Lahir</label>
+                            <input type="date" name="tanggallahir" value="<?php echo htmlspecialchars($mhs['tanggallahir']); ?>" class="shadow w-full py-2 px-3" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="gender" class="block font-bold mb-2">Jenis Kelamin</label>
+                            <select name="gender" class="shadow w-full py-2 px-3" required>
+                                <option value="Laki-laki" <?php echo ($mhs['gender'] == 'Laki-laki') ? 'selected' : ''; ?>>Laki-laki</option>
+                                <option value="Perempuan" <?php echo ($mhs['gender'] == 'Perempuan') ? 'selected' : ''; ?>>Perempuan</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block font-bold mb-2">Foto Saat Ini</label>
+                            <?php if (!empty($mhs['profile_photo']) && file_exists('../uploads/profile_photos/' . $mhs['profile_photo'])): ?>
+                                <img src="../uploads/profile_photos/<?php echo htmlspecialchars($mhs['profile_photo']); ?>" class="w-24 h-24 object-cover rounded-full shadow-md mb-2">
+                            <?php else: ?>
+                                <p class="text-sm italic text-gray-500">Tidak ada foto</p>
+                            <?php endif; ?>
+                            <label for="foto" class="block text-sm font-medium text-gray-500">Ganti Foto (opsional)</label>
+                            <input type="file" name="foto" id="foto" class="block w-full text-sm mt-1">
                         </div>
                     </div>
                 </div>

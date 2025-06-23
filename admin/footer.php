@@ -1,44 +1,50 @@
 <?php
 // File: partials/footer.php
 ?>
-    </div> <script>
-        // JavaScript untuk toggle sidebar di mobile
-        const menuButton = document.getElementById('menu-button');
-        const sidebar = document.getElementById('sidebar');
-        if (menuButton) {
-            menuButton.addEventListener('click', () => {
-                sidebar.classList.toggle('hidden');
-            });
-        }
+       </div> <!-- Penutup div utama layout -->
 
-        // JavaScript untuk toggle Dark Mode
-        var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
-        var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
-        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            themeToggleLightIcon.classList.remove('hidden');
-        } else {
-            themeToggleDarkIcon.classList.remove('hidden');
-        }
-        var themeToggleButton = document.getElementById('theme-toggle');
-        themeToggleButton.addEventListener('click', function() {
-            themeToggleDarkIcon.classList.toggle('hidden');
-            themeToggleLightIcon.classList.toggle('hidden');
-            if (localStorage.getItem('color-theme')) {
-                if (localStorage.getItem('color-theme') === 'light') {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('color-theme', 'dark');
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Toggle Sidebar untuk mobile
+            const menuButton = document.getElementById("menu-button");
+            const sidebar = document.getElementById("sidebar");
+
+            if (menuButton && sidebar) {
+                menuButton.addEventListener("click", () => {
+                    sidebar.classList.toggle("hidden");
+                });
+            }
+
+            // Toggle Tema Siang/Malam
+            const themeToggleBtn = document.getElementById("theme-toggle");
+            const darkIcon = document.getElementById("theme-toggle-dark-icon");
+            const lightIcon = document.getElementById("theme-toggle-light-icon");
+
+            function updateThemeIcon() {
+                const isDark = localStorage.getItem("color-theme") === "dark" ||
+                    (!("color-theme" in localStorage) &&
+                        window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+                if (isDark) {
+                    document.documentElement.classList.add("dark");
+                    lightIcon?.classList.remove("hidden");
+                    darkIcon?.classList.add("hidden");
                 } else {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('color-theme', 'light');
+                    document.documentElement.classList.remove("dark");
+                    lightIcon?.classList.add("hidden");
+                    darkIcon?.classList.remove("hidden");
                 }
-            } else {
-                if (document.documentElement.classList.contains('dark')) {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('color-theme', 'light');
-                } else {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('color-theme', 'dark');
-                }
+            }
+
+            updateThemeIcon();
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener("click", () => {
+                    document.documentElement.classList.toggle("dark");
+                    const isDark = document.documentElement.classList.contains("dark");
+                    localStorage.setItem("color-theme", isDark ? "dark" : "light");
+                    updateThemeIcon();
+                });
             }
         });
     </script>

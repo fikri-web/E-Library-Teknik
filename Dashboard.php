@@ -8,6 +8,14 @@ if (!isset($_SESSION['is_login'])) {
     exit();
 }
 
+// // Cek jika user adalah admin, redirect ke admin dashboard
+// if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true) {
+//     header("Location: admin/index.php");
+//     exit();
+// }
+
+
+// 
 $sql_kategori = "SELECT 
                     k.id AS id_kategori,
                     k.nama_kategori, 
@@ -24,6 +32,7 @@ $sql_kategori = "SELECT
 // GANTI NAMA VARIABEL INI
 $kategori_result = mysqli_query($db, $sql_kategori);
 
+// Hitung total kategori buku
 $sql_hitung_total = "SELECT COUNT(id) AS total_kategori FROM kategori_buku";
 $result_hitung = mysqli_query($db, $sql_hitung_total);
 $data_hitung = mysqli_fetch_assoc($result_hitung);
@@ -33,6 +42,7 @@ $jumlah_total_kategori = $data_hitung['total_kategori'] ?? 0;
 // Ambil ID user yang sedang login untuk pengecekan status bookmark
 $current_user_id = $_SESSION['user_id'] ?? 0;
 
+// Total bookmarks
 $sql_bookmarks_total = "SELECT COUNT(id) AS total_bookmarks FROM bookmarks";
 $result_bookmarks = mysqli_query($db, $sql_bookmarks_total);
 $data_bookmarks = mysqli_fetch_assoc($result_bookmarks);
@@ -54,6 +64,7 @@ $sql_buku_terbaru = "SELECT
                         k.nama_kategori, 
                         b.penerbit,
                         b.tahun_terbit,
+                        b.stok,
                         b.deskripsi,
                         CASE WHEN bm.id IS NOT NULL THEN 1 ELSE 0 END AS is_bookmarked
                     FROM 
@@ -353,8 +364,8 @@ if (isset($_POST['save_changes'])) {
         </div>
         <div class="mb-8">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-gray-800">Semua Buku</h2>
-                <a href="daftar-buku.php" class="text-sm text-indigo-600 hover:text-indigo-800">Lihat Semua</a>
+                <h2 class="text-xl font-bold text-gray-800">Buku Terbaru</h2>
+                <a href="#" id="lihatSemuaDashboardBtn" class="text-sm text-indigo-600 hover:text-indigo-800">Lihat Semua</a>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <?php if ($buku_terbaru_result && mysqli_num_rows($buku_terbaru_result) > 0): ?>
@@ -377,7 +388,7 @@ if (isset($_POST['save_changes'])) {
                                         data-penulis="<?= htmlspecialchars($buku['penulis']); ?>"
                                         data-penerbit="<?= htmlspecialchars($buku['penerbit'] ?? 'Tidak diketahui'); ?>"
                                         data-tahun="<?= htmlspecialchars($buku['tahun_terbit'] ?? '-'); ?>"
-                                        data-deskripsi="<?= htmlspecialchars($buku['deskripsi'] ?? 'Deskripsi tidak tersedia.'); ?>"
+                                        data-stok="<?= htmlspecialchars($buku['stok'] ?? '0'); ?>" data-deskripsi="<?= htmlspecialchars($buku['deskripsi'] ?? 'Deskripsi tidak tersedia.'); ?>"
                                         data-cover="<?= !empty($buku['cover']) ? 'Upload/covers/' . htmlspecialchars($buku['cover']) : 'path/to/default-cover.png'; ?>">
                                         Detail
                                     </a>
@@ -423,7 +434,7 @@ if (isset($_POST['save_changes'])) {
     <div id="bookmarksContent" class="hidden fade-in">
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Bookmark Saya</h1>
-        <p class="text-gray-600">Buku yang Anda simpan untuk dibaca nanti.</p>
+        <p class="text-gray-600">Buku yang Anda simpan untuk dipinjam nanti.</p>
     </div>
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="divide-y divide-gray-200">
@@ -433,7 +444,7 @@ if (isset($_POST['save_changes'])) {
             // Kita menggunakan variabel $current_user_id yang sudah kita definisikan di Langkah 3.
             $sql_my_bookmarks = "SELECT 
                                     b.id, b.judul, b.penulis, b.cover, b.deskripsi,
-                                    b.penerbit, b.tahun_terbit, k.nama_kategori
+                                    b.penerbit, b.tahun_terbit, b.stok, k.nama_kategori
                                  FROM buku b 
                                  JOIN bookmarks bm ON b.id = bm.id_buku
                                  LEFT JOIN kategori_buku k ON b.kategori_id = k.id
@@ -447,10 +458,15 @@ if (isset($_POST['save_changes'])) {
 
             if ($my_bookmarks_result->num_rows > 0) :
                 while ($book = $my_bookmarks_result->fetch_assoc()) :
-                    // Tentukan path cover buku
-                    $coverPath = !empty($book['cover']) ? 'Upload/covers/' . htmlspecialchars($book['cover']) : 'path/to/default-cover.png'; // Sesuaikan path default jika perlu
+                    $coverPath = !empty($book['cover']) ? 'Upload/covers/' . htmlspecialchars($book['cover']) : 'path/to/default-cover.png';
             ?>
-                    <div class="p-4 hover:bg-gray-50 transition duration-150">
+                    <div class="bookmark-item relative p-4 hover:bg-gray-50 transition-all duration-300">
+                        <button 
+                            class="remove-bookmark-btn absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:scale-125 transition-transform"
+                            data-id="<?= $book['id']; ?>"
+                            title="Hapus bookmark">
+                            <i class="fas fa-times"></i>
+                        </button>
                         <div class="flex items-start space-x-4">
                             <img class="h-24 w-16 object-cover rounded flex-shrink-0" src="<?= $coverPath; ?>" alt="Cover <?= htmlspecialchars($book['judul']); ?>">
                             <div class="flex-1">
@@ -459,15 +475,16 @@ if (isset($_POST['save_changes'])) {
                                 <p class="text-sm text-gray-500 mt-1 line-clamp-2"><?= htmlspecialchars($book['deskripsi']); ?></p>
                                 <div class="mt-2">
                                     <a href="#" 
-                                       class="detail-link text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                                       data-id="<?= $book['id']; ?>"
-                                       data-judul="<?= htmlspecialchars($book['judul']); ?>"
-                                       data-penulis="<?= htmlspecialchars($book['penulis']); ?>"
-                                       data-penerbit="<?= htmlspecialchars($book['penerbit'] ?? 'Tidak diketahui'); ?>"
-                                       data-tahun="<?= htmlspecialchars($book['tahun_terbit'] ?? '-'); ?>"
-                                       data-deskripsi="<?= htmlspecialchars($book['deskripsi'] ?? 'Deskripsi tidak tersedia.'); ?>"
-                                       data-cover="<?= $coverPath; ?>">
-                                       Lihat Detail
+                                    class="detail-link text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                                    data-id="<?= $book['id']; ?>"
+                                    data-judul="<?= htmlspecialchars($book['judul']); ?>"
+                                    data-penulis="<?= htmlspecialchars($book['penulis']); ?>"
+                                    data-penerbit="<?= htmlspecialchars($book['penerbit'] ?? 'Tidak diketahui'); ?>"
+                                    data-tahun="<?= htmlspecialchars($book['tahun_terbit'] ?? '-'); ?>"
+                                    data-stok="<?= htmlspecialchars($book['stok'] ?? 'Tidak diketahui'); ?>"
+                                    data-deskripsi="<?= htmlspecialchars($book['deskripsi'] ?? 'Deskripsi tidak tersedia.'); ?>"
+                                    data-cover="<?= $coverPath; ?>">
+                                        Lihat Detail
                                     </a>
                                 </div>
                             </div>
@@ -477,7 +494,7 @@ if (isset($_POST['save_changes'])) {
                 endwhile;
             else :
             ?>
-                <p class="p-6 text-center text-gray-500">Anda belum memiliki bookmark.</p>
+                <p id="no-bookmarks-message" class="p-6 text-center text-gray-500">Anda belum memiliki bookmark.</p>
             <?php endif; 
             $stmt_bm->close();
             ?>
@@ -616,6 +633,10 @@ if (isset($_POST['save_changes'])) {
                             <i class="fas fa-calendar-alt w-5 mr-3 text-gray-500"></i>
                             <p><strong>Tahun Terbit:</strong> <span id="modal-book-year"></span></p>
                         </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-book w-5 mr-3 text-gray-500"></i>
+                            <p><strong>Stok</strong> <span id="modal-book-stok"></span></p>
+                        </div>
                     </div>
                     <div class="mt-4 md:flex">
                         <div class="md:w-1/3 md:pr-8 flex-shrink-0 mb-4 md:mb-0">
@@ -676,6 +697,7 @@ if (isset($_POST['save_changes'])) {
     const modalTitle = document.getElementById('modalTitle');
     const modalContent = document.getElementById('modalContent');
     const lihatSemuaLinks = document.querySelectorAll('.lihat-semua-link');
+
     
 
 
@@ -702,44 +724,119 @@ if (isset($_POST['save_changes'])) {
     settingsLink.addEventListener('click', (e) => showPage(e, settingsLink, settingsContent));
     
     // --- Event Listener untuk Popup Kategori (VERSI BARU YANG LENGKAP) ---
-    lihatSemuaLinks.forEach(link => {
-        link.addEventListener('click', function(event) {
+  // Bagian di dalam DOMContentLoaded atau setelah semua elemen diinisialisasi
+lihatSemuaLinks.forEach(link => {
+    link.addEventListener('click', function(event) {
+        event.preventDefault();
+
+        const kategoriId = this.dataset.id;
+        showModal();
+        modalContent.innerHTML = '<p class="text-center py-5">Memuat data...</p>';
+
+        fetch(`api_get_books.php?id=${kategoriId}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Gagal mengambil data');
+                return res.json();
+            })
+            .then(data => {
+                console.log('Data API:', data); // Debug respons API
+
+                modalTitle.innerText = `Daftar Buku: ${data.nama_kategori}`;
+
+                let html = `
+                    <div class="overflow-x-auto">
+                      <table class="min-w-full leading-normal">
+                        <thead class="bg-gray-100">
+                          <tr>
+                            <th class="px-5 py-3 border-b-2 text-left text-xs font-semibold uppercase">Cover</th>
+                            <th class="px-5 py-3 border-b-2 text-left text-xs font-semibold uppercase">Judul</th>
+                            <th class="px-5 py-3 border-b-2 text-left text-xs font-semibold uppercase">Penulis</th>
+                            <th class="px-5 py-3 border-b-2 text-left text-xs font-semibold uppercase">Penerbit</th>
+                            <th class="px-5 py-3 border-b-2 text-left text-xs font-semibold uppercase">Tahun</th>
+                            <th class="px-5 py-3 border-b-2 text-left text-xs font-semibold uppercase">Stok</th>
+                          </tr>
+                        </thead>
+                        <tbody>`;
+
+                if (data.buku && data.buku.length > 0) {
+                    data.buku.forEach(b => {
+                        const imgSrc = b.cover ? `upload/covers/${b.cover}` : 'path/to/default-image.png';
+                        html += `
+                            <tr class="hover:bg-gray-50">
+                              <td class="px-5 py-3 border-b"><img src="${imgSrc}" class="w-16 h-24 object-cover rounded" alt=""></td>
+                              <td class="px-5 py-3 border-b">${b.judul}</td>
+                              <td class="px-5 py-3 border-b">${b.penulis}</td>
+                              <td class="px-5 py-3 border-b">${b.penerbit}</td>
+                              <td class="px-5 py-3 border-b">${b.tahun_terbit}</td>
+                              <td class="px-5 py-3 border-b">${b.stok}</td>
+                            </tr>`;
+                    });
+                } else {
+                    html += `
+                        <tr>
+                          <td colspan="6" class="text-center py-10">Belum ada buku dalam kategori ini.</td>
+                        </tr>`;
+                }
+
+                html += `</tbody></table></div>`;
+                modalContent.innerHTML = html;
+            })
+            .catch(err => {
+                console.error(err);
+                modalContent.innerHTML = '<p class="text-red-500 text-center py-5">Gagal memuat data.</p>';
+            });
+    });
+});
+// ... (kode javascript Anda yang lain) ...
+
+   const lihatSemuaDashboardBtn = document.getElementById('lihatSemuaDashboardBtn');
+    if (lihatSemuaDashboardBtn) {
+        lihatSemuaDashboardBtn.addEventListener('click', function(event) {
             event.preventDefault();
-            const kategoriId = this.dataset.id;
+            const modal = document.getElementById('booksModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
             
-            showModal();
-            modalContent.innerHTML = '<p id="modalLoading" class="text-center py-5">Memuat data...</p>';
+            modal.classList.remove('hidden');
+            modalContent.innerHTML = '<p class="text-center py-10 text-gray-500">Memuat semua koleksi...</p>';
+            modalTitle.innerText = 'Semua Buku';
 
-            fetch(`api_get_books.php?id=${kategoriId}`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    modalTitle.innerText = `Daftar Buku: ${data.nama_kategori}`;
-                    
-                    let tableHTML = `<div class="overflow-x-auto"><table class="min-w-full leading-normal"><thead><tr><th class="px-5 py-3 border-b-2 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">Cover</th><th class="px-5 py-3 border-b-2 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">Judul</th><th class="px-5 py-3 border-b-2 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">Penulis</th><th class="px-5 py-3 border-b-2 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">Penerbit</th><th class="px-5 py-3 border-b-2 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">Tahun</th></tr></thead><tbody>`;
-
-                    if (data.buku && data.buku.length > 0) {
-                        data.buku.forEach(buku => {
-                            const imagePath = `upload/covers/${buku.cover}`; // <-- SESUAIKAN PATH INI
-                            const defaultImage = 'path/to/default-image.png'; // <-- GANTI DENGAN GAMBAR DEFAULT
-                            
-                            tableHTML += `<tr class="hover:bg-gray-50"><td class="px-5 py-3 border-b border-gray-200"><img src="${buku.cover ? imagePath : defaultImage}" alt="Cover" class="w-16 h-24 object-cover rounded"></td><td class="px-5 py-3 border-b border-gray-200 align-top"><p class="font-semibold">${buku.judul}</p></td><td class="px-5 py-3 border-b border-gray-200 align-top">${buku.penulis}</td><td class="px-5 py-3 border-b border-gray-200 align-top">${buku.penerbit}</td><td class="px-5 py-3 border-b border-gray-200 align-top">${buku.tahun_terbit}</td></tr>`;
+            fetch('api_get_semua_buku.php')
+                .then(res => res.json())
+                .then(bukuList => {
+                    let html = '';
+                    if (bukuList && bukuList.length > 0) {
+                        html += '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">';
+                        bukuList.forEach(buku => {
+                            const coverPath = buku.cover ? `Upload/covers/${buku.cover}` : 'path/to/default-cover.png';
+                            html += `
+                                <div class="book-card flex flex-col bg-white rounded-lg shadow overflow-hidden transition duration-300">
+                                    <div class="relative w-full" style="padding-bottom: 125%;">
+                                        <img class="absolute inset-0 w-full h-full object-cover" src="${coverPath}" alt="Cover ${buku.judul}">
+                                    </div>
+                                    <div class="p-2 flex flex-col flex-grow min-w-0"> 
+                                        <h3 class="font-semibold text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis" title="${buku.judul}">${buku.judul}</h3>
+                                        <p class="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title="${buku.penulis}">${buku.penulis}</p>
+                                        
+                                        <div class="mt-auto pt-2 text-right"> 
+                                            <a href="#" class="detail-link text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                                               data-id="${buku.id}" data-judul="${buku.judul}" data-penulis="${buku.penulis}" data-penerbit="${buku.penerbit}" data-tahun="${buku.tahun_terbit}" data-stok="${buku.stok}" data-deskripsi="${buku.deskripsi}" data-cover="${coverPath}">
+                                               Detail
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                         });
+                        html += '</div>';
                     } else {
-                        tableHTML += `<tr><td colspan="5" class="text-center py-10">Belum ada buku dalam kategori ini.</td></tr>`;
+                        html = '<p class="text-center py-10 text-gray-500">Belum ada buku di perpustakaan.</p>';
                     }
-                    
-                    tableHTML += `</tbody></table></div>`;
-                    modalContent.innerHTML = tableHTML;
-                })
-                .catch(error => {
-                    modalContent.innerHTML = '<p class="text-red-500 text-center">Gagal memuat data.</p>';
-                    console.error('Error:', error);
+                    modalContent.innerHTML = html;
                 });
         });
-    });
+    }
+
 
     closeModalBtn.addEventListener('click', hideModal);
     modal.addEventListener('click', (e) => {
@@ -749,45 +846,124 @@ if (isset($_POST['save_changes'])) {
     document.body.addEventListener('click', function(event) {
         
         // 1. Cek apakah yang diklik adalah tombol bookmark
-        const bookmarkBtn = event.target.closest('.bookmark-btn');
-
+         // 1. Cek apakah yang diklik adalah tombol bookmark (YANG SUDAH ADA)
+     const bookmarkBtn = event.target.closest('.bookmark-btn');
         if (bookmarkBtn) {
-            // 2. Ambil ID buku dari atribut 'data-id'
+            event.preventDefault();
             const bookId = bookmarkBtn.dataset.id;
             const icon = bookmarkBtn.querySelector('i');
 
-            // 3. Kirim permintaan ke server di belakang layar (AJAX/Fetch)
+            // Kirim permintaan ke server untuk menambah/menghapus bookmark
             fetch('handle_bookmark.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'id_buku=' + bookId
             })
-            .then(response => response.json()) // 4. Terima balasan dari server
+            .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // 5. Jika sukses, ubah ikonnya secara langsung
-                    if (data.action === 'bookmarked') {
-                        // Jika berhasil di-bookmark, ubah ikon jadi solid & berwarna
-                        icon.classList.remove('far'); 
-                        icon.classList.add('fas', 'text-indigo-600'); 
-                    } else { // Jika aksinya 'removed'
-                        // Jika berhasil di-unbookmark, kembalikan ikon jadi outline
-                        icon.classList.remove('fas', 'text-indigo-600'); 
+                    if (data.action === 'added') {
+                        // Ubah ikon menjadi solid (telah di-bookmark)
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        bookmarkBtn.classList.add('text-red-500'); // Beri warna merah
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Ditambahkan ke bookmark',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else { // Jika aksinya 'removed' (dihapus)
+                        // Ubah ikon menjadi reguler (belum di-bookmark)
+                        icon.classList.remove('fas');
                         icon.classList.add('far');
+                        bookmarkBtn.classList.remove('text-red-500'); // Hapus warna merah
+                         Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'info',
+                            title: 'Dihapus dari bookmark',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
                     }
                 } else {
-                    // Jika gagal, tampilkan pesan error
-                    alert(data.message || 'Terjadi kesalahan!');
+                    Swal.fire('Gagal', data.message || 'Gagal memproses bookmark.', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Tidak bisa terhubung ke server.');
+                Swal.fire('Error', 'Tidak bisa terhubung ke server.', 'error');
             });
         }
-    });
+
+    // !! TAMBAHKAN BLOK KODE BARU DI BAWAH INI !!
+
+    // 2. Cek apakah tombol hapus bookmark yang diklik
+    const removeBtn = event.target.closest('.remove-bookmark-btn');
+    if (removeBtn) {
+        event.preventDefault();
+        const bookId = removeBtn.dataset.id;
+        const bookmarkItem = removeBtn.closest('.bookmark-item'); // Ambil elemen item untuk dihapus dari tampilan
+
+        Swal.fire({
+            title: 'Hapus Bookmark?',
+            text: "Buku ini akan dihapus dari daftar bookmark Anda.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Kirim permintaan ke server
+                fetch('handle_bookmark.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id_buku=' + bookId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.action === 'removed') {
+                        // Animasi fade out dan hapus elemen dari halaman
+                        bookmarkItem.style.transition = 'opacity 0.5s ease';
+                        bookmarkItem.style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            bookmarkItem.remove();
+
+                            // Cek apakah ada item bookmark yang tersisa
+                            const remainingItems = document.querySelectorAll('.bookmark-item').length;
+                            if (remainingItems === 0) {
+                                const container = document.querySelector('#bookmarksContent .divide-y');
+                                container.innerHTML = '<p id="no-bookmarks-message" class="p-6 text-center text-gray-500">Anda belum memiliki bookmark.</p>';
+                            }
+
+                        }, 500); // Tunggu animasi selesai
+
+                        Swal.fire({
+                           icon: 'success',
+                           title: 'Dihapus!',
+                           text: 'Bookmark telah berhasil dihapus.',
+                           timer: 1500,
+                           showConfirmButton: false
+                        });
+
+                    } else {
+                        Swal.fire('Gagal', 'Gagal menghapus bookmark. Coba lagi.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Tidak bisa terhubung ke server.', 'error');
+                });
+            }
+        });
+    }
+});
 
 
     // --- Event Listener untuk Fitur Lainnya ---
@@ -904,6 +1080,7 @@ if (isset($_POST['save_changes'])) {
     const modalAuthor = document.getElementById('modal-book-author');
     const modalPublisher = document.getElementById('modal-book-publisher');
     const modalYear = document.getElementById('modal-book-year');
+    const modalStok = document.getElementById('modal-book-stok'); // Tambahkan elemen stok
     const modalReadLink = document.getElementById('modal-read-book-link');
     const modalDescription = document.getElementById('modal-book-description');
 
@@ -918,6 +1095,7 @@ if (isset($_POST['save_changes'])) {
         modalAuthor.textContent = data.penulis;
         modalPublisher.textContent = data.penerbit;
         modalYear.textContent = data.tahun;
+        modalStok.textContent = data.stok; // Tambahkan stok
         modalDescription.textContent = data.deskripsi || 'Deskripsi tidak tersedia.';
         
         // Atur link untuk tombol "Baca Buku"
@@ -952,6 +1130,7 @@ if (isset($_POST['save_changes'])) {
                 penerbit: link.dataset.penerbit,
                 tahun: link.dataset.tahun,
                 cover: link.dataset.cover,
+                stok: link.dataset.stok || 'Tidak diketahui',
                 deskripsi: link.dataset.deskripsi
             };
             

@@ -20,7 +20,7 @@ $nama_kategori = $kategori ? htmlspecialchars($kategori['nama_kategori']) : "Kat
 $stmt_nama->close();
 
 // Langkah 3: Ambil SEMUA BUKU yang termasuk dalam kategori tersebut
-$sql_buku = "SELECT id, judul, penulis, penerbit, tahun_terbit FROM buku WHERE kategori_id = ?";
+$sql_buku = "SELECT id, judul, penulis, penerbit, tahun_terbit, stok FROM buku WHERE kategori_id = ?";
 $stmt_buku = $db->prepare($sql_buku);
 $stmt_buku->bind_param("i", $id_kategori_dipilih);
 $stmt_buku->execute();
@@ -53,6 +53,7 @@ $result_buku = $stmt_buku->get_result();
                         <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Penulis</th>
                         <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Penerbit</th>
                         <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tahun Terbit</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stok</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,6 +71,9 @@ $result_buku = $stmt_buku->get_result();
                                 </td>
                                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                     <p class="text-gray-900 whitespace-no-wrap"><?= htmlspecialchars($buku['tahun_terbit']) ?></p>
+                                </td>
+                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <p class="text-gray-900 whitespace-no-wrap"><?= htmlspecialchars($buku['stok']) ?></p>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
