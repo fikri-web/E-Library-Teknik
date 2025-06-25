@@ -1,83 +1,135 @@
 <?php
+/**
+ * File: cari_buku.php
+ * Deskripsi: Skrip untuk menangani pencarian buku melalui AJAX dari halaman dashboard.
+ */
+
+// Sesi dimulai untuk mengakses data login pengguna
+session_start();
+
+// ====== PENGATURAN UNTUK DEBUGGING ======
+// Baris ini akan menampilkan semua error PHP. Sangat membantu saat development.
+// Hapus atau beri komentar pada baris ini jika website sudah berjalan (production).
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+// =======================================
 
-session_start();
+
+// ====== KONEKSI & KEAMANAN ======
+
+// 1. Memuat file koneksi database.
+// PASTIKAN NAMA FILE INI BENAR! Jika nama file Anda koneksi.php, ganti menjadi koneksi.php
 require_once "service/database.php"; 
 
-// Pastikan variabel koneksi ($db atau $koneksi) sudah benar
-if (!isset($db)) { global $koneksi; $db = $koneksi; }
+// 2. Memastikan variabel koneksi database ($db) ada.
+// Kode ini mengatasi jika nama variabel di file koneksi adalah $koneksi, bukan $db.
+if (!isset($db)) { 
+    if (isset($koneksi)) {
+        $db = $koneksi;
+    } else {
+        // Jika tidak ada koneksi sama sekali, hentikan skrip dengan pesan error.
+        die('<p class="p-6 text-center text-red-500">Error: Koneksi database tidak dapat ditemukan.</p>');
+    }
+}
 
-// Ambil kata kunci dari JavaScript
-$query = $_GET['q'] ?? '';
+// 3. Memastikan pengguna sudah login.
+if (!isset($_SESSION['user_id'])) {
+    die('<p class="text-red-500 text-center py-10">Akses ditolak. Silakan login terlebih dahulu.</p>');
+}
+$current_user_id = $_SESSION['user_id'];
 
-// Jika kata kunci kosong, tidak perlu melakukan apa-apa
-if (empty(trim($query))) {
+
+// ====== PROSES INPUT ======
+
+// 4. Ambil kata kunci pencarian dari URL (dikirim oleh JavaScript) dengan aman.
+$query = trim($_GET['q'] ?? '');
+
+// Jika kata kunci kosong, jangan lakukan pencarian.
+if (empty($query)) {
+    echo '<p class="text-gray-500 text-center py-10">Silakan masukkan kata kunci pencarian.</p>';
     exit();
 }
 
-// Persiapkan kata kunci untuk pencarian LIKE
+
+// ====== QUERY DATABASE ======
+
+// 5. Siapkan query pencarian yang aman menggunakan Prepared Statements.
 $search_term = "%" . $query . "%";
+$sql = "SELECT 
+            b.id, b.judul, b.penulis, b.cover, b.penerbit, b.tahun_terbit, b.stok, b.deskripsi, k.nama_kategori,
+            CASE WHEN bm.id IS NOT NULL THEN 1 ELSE 0 END AS is_bookmarked
+        FROM buku b
+        LEFT JOIN kategori_buku k ON b.kategori_id = k.id
+        LEFT JOIN bookmarks bm ON b.id = bm.id_buku AND bm.id_user = ?
+        WHERE b.judul LIKE ? OR b.penulis LIKE ?
+        ORDER BY b.judul ASC";
 
-$current_user_id = $_SESSION['user_id'] ?? 0;
+$stmt = $db->prepare($sql);
 
-// Query untuk mencari di judul atau penulis
-// Kita juga tetap mengambil status bookmark seperti di halaman utama
-$sql_search = "SELECT 
-                    b.*, 
-                    k.nama_kategori,
-                    CASE WHEN bm.id IS NOT NULL THEN 1 ELSE 0 END AS is_bookmarked 
-                FROM 
-                    buku b
-                LEFT JOIN 
-                    kategori_buku k ON b.kategori_id = k.id
-                LEFT JOIN 
-                    bookmarks bm ON b.id = bm.id_buku AND bm.id_user = ?
-                WHERE 
-                    b.judul LIKE ? OR b.penulis LIKE ?
-                ORDER BY
-                    b.judul ASC";
+// Jika persiapan query gagal (misal: ada error di SQL), hentikan skrip.
+if ($stmt === false) {
+    die("Error saat mempersiapkan query: " . $db->error);
+}
 
-$stmt = $db->prepare($sql_search);
-// Bind parameter: i untuk integer (id_user), s untuk string (kata kunci)
+// 6. Bind parameter untuk keamanan (mencegah SQL Injection).
 $stmt->bind_param("iss", $current_user_id, $search_term, $search_term);
+
+// 7. Eksekusi query.
 $stmt->execute();
 $result = $stmt->get_result();
 
+
+// ====== TAMPILKAN HASIL ======
+
+// 8. Tampilkan header untuk hasil pencarian.
+echo '<h2 class="text-2xl font-bold text-gray-800 mb-4">Hasil Pencarian untuk: <span class="text-indigo-600">' . htmlspecialchars($query) . '</span></h2>';
+
 if ($result->num_rows > 0) {
-    // Jika buku ditemukan, tampilkan dalam bentuk grid
+    // Jika ada hasil, tampilkan dalam format grid.
     echo '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">';
     while ($buku = $result->fetch_assoc()) {
-        $is_bookmarked = $buku['is_bookmarked'];
-        $bookmark_icon_class = $is_bookmarked ? 'fas text-indigo-600' : 'far';
-        
-        // Tampilkan setiap kartu buku (kode ini sama seperti di Dashboard)
-        echo '<div class="book-card bg-white rounded-lg shadow overflow-hidden transition duration-300">';
-        echo '    <div class="relative pb-3/4">';
-        echo '        <img class="w-full h-48 object-cover" src="Upload/covers/' . htmlspecialchars($buku['cover'] ?? 'default.png') . '" alt="Cover Buku">';
-        echo '        <button class="bookmark-btn absolute top-2 right-2 p-2 bg-white rounded-full ..." data-id="' . $buku['id'] . '">';
-        echo '            <i class="' . $bookmark_icon_class . ' fa-bookmark"></i>';
-        echo '        </button>';
-        echo '    </div>';
-        echo '    <div class="p-3">';
-        echo '        <h3 class="font-semibold text-gray-800 truncate">' . htmlspecialchars($buku['judul']) . '</h3>';
-        echo '        <p class="text-sm text-gray-600">' . htmlspecialchars($buku['penulis']) . '</p>';
-        echo '        <div class="flex justify-between items-center mt-2">';
-        echo '            <span class="text-xs bg-indigo-100 ...">' . htmlspecialchars($buku['nama_kategori'] ?? 'Tanpa Kategori') . '</span>';
-        echo '            <a href="#" class="detail-link text-indigo-600 ..." data-id="' . $buku['id'] . '">Detail</a>';
-        echo '        </div>';
-        echo '    </div>';
-        echo '</div>';
+        $coverPath = !empty($buku['cover']) ? 'Upload/covers/' . htmlspecialchars($buku['cover']) : 'path/to/default-cover.png';
+        // Tampilkan setiap kartu buku. Struktur HTML dan semua atribut data-*
+        // harus sama persis dengan yang ada di Dashboard.php agar JavaScript bisa berfungsi.
+        ?>
+        <div class="book-card bg-white rounded-lg shadow overflow-hidden transition duration-300">
+            <div class="relative w-full" style="padding-bottom: 140%;">
+                <img class="absolute inset-0 w-full h-full object-cover" src="<?= $coverPath; ?>" alt="Cover Buku <?= htmlspecialchars($buku['judul']); ?>">
+            </div>
+            <div class="p-3 flex flex-col flex-grow">
+                <h3 class="font-semibold text-gray-800 truncate" title="<?= htmlspecialchars($buku['judul']); ?>"><?= htmlspecialchars($buku['judul']); ?></h3>
+                <p class="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis"><?= htmlspecialchars($buku['penulis']); ?></p>
+                <div class="flex justify-between items-center mt-2 pt-2 border-t">
+                    <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded"><?= htmlspecialchars($buku['nama_kategori'] ?? 'N/A'); ?></span>
+                    
+                    <a href="#" 
+                        class="detail-link text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                        data-id="<?= $buku['id']; ?>"
+                        data-judul="<?= htmlspecialchars($buku['judul']); ?>"
+                        data-penulis="<?= htmlspecialchars($buku['penulis']); ?>"
+                        data-penerbit="<?= htmlspecialchars($buku['penerbit'] ?? 'N/A'); ?>"
+                        data-tahun="<?= htmlspecialchars($buku['tahun_terbit'] ?? '-'); ?>"
+                        data-stok="<?= htmlspecialchars($buku['stok'] ?? '0'); ?>"
+                        data-deskripsi="<?= htmlspecialchars($buku['deskripsi'] ?? 'Deskripsi tidak tersedia.'); ?>"
+                        data-cover="<?= $coverPath; ?>">
+                        Detail
+                    </a>
+                </div>
+            </div>
+        </div>
+        <?php
     }
-    echo '</div>';
+    echo '</div>'; // Penutup grid container
 } else {
-    // Jika tidak ada hasil
+    // Jika tidak ada hasil, tampilkan pesan.
     echo '<div class="text-center py-10">';
     echo '  <i class="fas fa-search fa-3x text-gray-400 mb-4"></i>';
     echo '  <p class="text-gray-500">Buku dengan kata kunci "<strong>' . htmlspecialchars($query) . '</strong>" tidak ditemukan.</p>';
     echo '</div>';
 }
 
+// 9. Tutup statement dan koneksi untuk membersihkan resource.
 $stmt->close();
+$db->close();
 ?>
