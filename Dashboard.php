@@ -37,11 +37,16 @@ $jumlah_total_kategori = $data_hitung['total_kategori'] ?? 0;
 // Get current user ID for bookmark checking
 $current_user_id = $_SESSION['user_id'] ?? 0;
 
-// Total bookmarks
-$sql_bookmarks_total = "SELECT COUNT(id) AS total_bookmarks FROM bookmarks";
-$result_bookmarks = mysqli_query($db, $sql_bookmarks_total);
-$data_bookmarks = mysqli_fetch_assoc($result_bookmarks);
+$sql_bookmarks_total = "SELECT COUNT(id) AS total_bookmarks FROM bookmarks WHERE id_user = ?";
+
+// Gunakan prepared statement untuk keamanan
+$stmt_bookmarks = $db->prepare($sql_bookmarks_total);
+$stmt_bookmarks->bind_param("i", $current_user_id);
+$stmt_bookmarks->execute();
+$result_bookmarks = $stmt_bookmarks->get_result();
+$data_bookmarks = $result_bookmarks->fetch_assoc();
 $total_bookmarks = $data_bookmarks['total_bookmarks'] ?? 0;
+$stmt_bookmarks->close();
 
 // Total books
 $sql_total_buku = "SELECT COUNT(id) AS total_buku FROM buku";
